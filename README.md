@@ -166,17 +166,18 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+  const url = "http://localhost:3000";
 
-  const login = async (email, password) => {
-    const response = await axios.post('/api/login', { email, password });
+  const login = async (email, senha) => {
+    const response = await axios.post(`${url}/login`, {email, senha });
     localStorage.setItem('token', response.data.token);
     setUser({ email });
     navigate('/');
   };
 
-  const register = async (email, password) => {
-    await axios.post('/api/register', { email, password });
-    await login(email, password);
+  const register = async (nome, email, senha) => {
+    await axios.post(`${url}/signup`, { nome, email, senha });
+    await login(email, senha);
   };
 
   const logout = () => {
@@ -235,17 +236,19 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Register() {
+  const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { register } = useAuth();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    register(email, password);
+    register(nome, email, password);
   };
 
   return (
     <form onSubmit={handleSubmit}>
+      <input placeholder="Nome" value={nome} onChange={(e) => setNome(e.target.value)} />
       <input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
       <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
       <button type="submit">Registrar</button>
@@ -265,9 +268,10 @@ export default function Messages() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const token = localStorage.getItem('token');
+  const url = "http://localhost:3000";
 
   const fetchMessages = async () => {
-    const response = await axios.get('/api/messages', {
+    const response = await axios.get(`${url}/messages`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     setMessages(response.data);
@@ -275,7 +279,7 @@ export default function Messages() {
 
   const sendMessage = async () => {
     if (newMessage.trim() !== '') {
-      await axios.post('/api/messages', { text: newMessage }, {
+      await axios.post(`${url}/messages`, { text: newMessage }, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setNewMessage('');
@@ -295,60 +299,12 @@ export default function Messages() {
         {messages.map((msg) => (
           <li key={msg.id}>
             {msg.text}
-            <CommentSection messageId={msg.id} />
           </li>
         ))}
       </ul>
     </div>
   );
 }
-```
-
-## `src/components/CommentSection.jsx`
-
-```jsx
-import { useEffect, useState } from 'react';
-import axios from 'axios';
-
-export default function CommentSection({ messageId }) {
-  const [comment, setComment] = useState('');
-  const [comments, setComments] = useState([]);
-  const token = localStorage.getItem('token');
-
-  const fetchComments = async () => {
-    const response = await axios.get(`/api/messages/${messageId}/comments`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    setComments(response.data);
-  };
-
-  const submitComment = async () => {
-    if (comment.trim() !== '') {
-      await axios.post(`/api/messages/${messageId}/comments`, { text: comment }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setComment('');
-      fetchComments();
-    }
-  };
-
-  useEffect(() => {
-    fetchComments();
-  }, []);
-
-  return (
-    <div style={{ marginLeft: '20px' }}>
-      <input value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Comente" />
-      <button onClick={submitComment}>Comentar</button>
-      <ul>
-        {comments.map((c, index) => (
-          <li key={index}>{c.text}</li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-```
 
 ## `src/components/PrivateRoute.jsx`
 
