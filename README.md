@@ -305,6 +305,7 @@ export default function Messages() {
     </div>
   );
 }
+```
 
 ## `src/components/PrivateRoute.jsx`
 
